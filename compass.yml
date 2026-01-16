@@ -1,0 +1,14 @@
+name: PSDocumentor
+id: ari:cloud:compass:eddcc978-84fc-448e-904c-0d4d7a6ccae6:component/dcebf165-b94d-4d6f-a806-e63f9a99f66a/9d2cbe1e-7678-4222-bd44-40643ffeb7d0
+description: Automatic PowerShell Function Documenting
+configVersion: 1
+typeId: SERVICE
+fields:
+  tier: 4
+links: []
+relationships:
+  DEPENDS_ON: []
+labels:
+  - language:powershell
+  - source:github
+customFields: null
