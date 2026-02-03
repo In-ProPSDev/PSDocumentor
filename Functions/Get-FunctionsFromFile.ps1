@@ -1,8 +1,9 @@
-Function Get-FunctionsFromFile {
-    <#
-        .SYNOPSIS
+
+<#
+    .SYNOPSIS
         Extracts all functions from a script file and creates a new temporary script file containing all those functions
-    #>
+#>
+Function Get-FunctionsFromFile {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true, HelpMessage = 'The path to the original script file')]
@@ -17,7 +18,10 @@ Function Get-FunctionsFromFile {
             Value   = ""
         }
 
-        $TempFilePath = "$global:RootFolder\Temp\Temp-$FileNoExt-$(Get-RandomValue -Count 5).ps1"
+        $Script:TempPath = [System.IO.Path]::GetTempPath()
+        $Script:TempDir = [System.IO.Directory]::CreateTempSubdirectory()
+        $TempFilePath = "$Script:TempDir\Temp-$FileNoExt-$(Get-RandomValue -Count 5).ps1"
+        #$TempFilePath = "$global:RootFolder\Temp\Temp-$FileNoExt-$(Get-RandomValue -Count 5).ps1"
 
         $Tokens = $null
         $Errors = $null
@@ -29,7 +33,8 @@ Function Get-FunctionsFromFile {
             }, $true)
 
         Write-Verbose "Creating temp script file '$TempFilePath'"
-        $null = Add-Content -Path $TempFilePath -Value $FunctionDefinitions
+        #$null = Add-Content -Path $TempFilePath -Value $FunctionDefinitions
+        Set-Content -Path $TempFilePath -Value $FunctionDefinitions
 
         $ReturnValue.Success = $true
         $ReturnValue.Value = $TempFilePath
