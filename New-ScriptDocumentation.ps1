@@ -83,17 +83,21 @@ Function New-ScriptDocumentation {
 
     If ($PSCmdlet.ParameterSetName -eq 'File') {
         Write-Verbose "Processing single file '$File'"
+
         If (Test-Path -Path $File) {
             $global:ProjectFolderPath = Split-Path $File -Parent
             $global:ProjectFolderName = [System.IO.Path]::GetFileName($global:ProjectFolderPath)
             $global:ProjectFolderParent = Split-Path $global:ProjectFolderPath -Parent
+
             Write-Verbose "File '$File' exists. Start processing"
+            
             $ProcessName = (Get-Item $File).Basename
             $CurrentFile = Start-FileProcessing -File $File
             $Result += $CurrentFile
         } Else {
             Write-Error "The file '$File' doesn't exist!"
         }
+
     } ElseIf ($PSCmdlet.ParameterSetName -eq 'Folder') {
         Write-Verbose "Processing folder '$Folder'"
         If (Test-Path -Path $Folder -PathType Container) {

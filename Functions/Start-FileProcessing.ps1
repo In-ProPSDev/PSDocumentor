@@ -1,8 +1,9 @@
-Function Start-FileProcessing {
-    <#
-        .SYNOPSIS
+
+<#
+    .SYNOPSIS
         Processes a script file passed to it and calls the other functions to get the documentation object
-    #>
+#>
+Function Start-FileProcessing {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory = $true, HelpMessage = 'The path to the original script file')]
