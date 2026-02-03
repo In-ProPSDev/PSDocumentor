@@ -28,6 +28,7 @@ Function New-MarkdownDocumentation {
 
     If ($Output -eq 'Multi') {
         Write-Verbose "Generating multiple documentation files for each script"
+
         ForEach ($Element in $Data) {
             $ReturnFile = New-Object -TypeName PSObject -Property @{
                 Success = ""
@@ -37,36 +38,45 @@ Function New-MarkdownDocumentation {
 
             Try {
                 $FilenameNoExt = (Get-Item -Path "$global:ProjectFolderParent$($Element.Path)\$($Element.File)").Basename
-                $OutputFile = "$DestinationPath\$($FilenameDate)_Documentation_$($FilenameNoExt).md"
+                $OutputFile = "$DestinationPath\$($FilenameNoExt)_$($FilenameDate).md"
+                
                 Add-Content -Path $OutputFile -Value @(
-                    "# PowerShell Script Functions Documentation",
-                    "``````YAML",
+                    "# $($FilenameNoExt) Script Functions Documentation",
+                    "`n",
+                    "``````yaml",
                     "Script: $($Element.File)",
                     "Path: $($Element.Path)",
                     "Date: $Date",
-                    "``````" 
+                    "``````" ,
+                    "`n"
                 )
+
                 If ($Element.Functions.Count -ne 0) {
-                    Add-Content -Path $OutputFile -Value "## Contents"
+                    Add-Content -Path $OutputFile -Value "## Contents`r`n"
                 
                     ForEach ($ContentItem in $Element.Functions) {
                         Add-Content -Path $OutputFile -Value " - [$($ContentItem.Name)](#$($($ContentItem.Name).ToLower()))"
                     }
 
                     ForEach ($FunctionItem in $Element.Functions) {
-                        Add-Content -Path $OutputFile -Value "## $($FunctionItem.Name)"
-                        Add-Content -Path $OutputFile -Value "Location: $($FunctionItem.Location)"
+                        Add-Content -Path $OutputFile -Value "`n---`n"
+                        Add-Content -Path $OutputFile -Value "`n## $($FunctionItem.Name)"
+                        Add-Content -Path $OutputFile -Value "`nLocation: [$($FilenameNoExt)](<$($FunctionItem.Location)>)"
+
                         If (Test-Path -Path "$global:ProjectFolderParent$($FunctionItem.Location)") {
                             Add-Content -Path $OutputFile -Value @(
-                                "### Syntax",
-                                "``````",
+                                "`n### Syntax",
+                                "`n",
+                                "``````powershell",
                                 "$($FunctionItem.Syntax)",
-                                "``````"
+                                "``````",
+                                "`n"
                             )
 
                             If (-not ([String]::IsNullOrEmpty($FunctionItem.Synopsis))) {
                                 Add-Content -Path $OutputFile -Value @(
                                     "### Synopsis",
+                                    "`n",
                                     "$($FunctionItem.Synopsis) `r`n"
                                 )
                             }
@@ -74,24 +84,25 @@ Function New-MarkdownDocumentation {
                             If (-not ([String]::IsNullOrEmpty($FunctionItem.Description))) {
                                 Add-Content -Path $OutputFile -Value @(
                                     "### Description",
+                                    "`n",
                                     "$($FunctionItem.Description) `r`n"
                                 )
                             }
 
                             If ($FunctionItem.Examples.Count -gt 0) {
-                                Add-Content -Path $OutputFile -Value "### Examples"
+                                Add-Content -Path $OutputFile -Value "### Examples`r`n"
                                 ForEach ($ExampleItem in $FunctionItem.Examples) {
-                                    Add-Content -Path $OutputFile -Value "#### $($ExampleItem.Title)"
+                                    Add-Content -Path $OutputFile -Value "#### $($ExampleItem.Title)`r`n"
                                     Add-Content -Path $OutputFile -Value $ExampleItem.Description
                                 }
                             }
 
                             If ($FunctionItem.Parameters.Count -gt 0) {
-                                Add-Content -Path $OutputFile -Value "### Parameters"
+                                Add-Content -Path $OutputFile -Value "### Parameters`n"
                                 ForEach ($ParameterItem in $FunctionItem.Parameters) {
                                     Add-Content -Path $OutputFile -Value @(
                                         "``-$($ParameterItem.Name)``",
-                                        "`r`n",
+                                        "`n",
                                         "$($ParameterItem.HelpMessage)",
                                         "<table>",
                                         "<tr><td>Type</td><td>$($ParameterItem.ParameterType)</td></tr>",
@@ -99,30 +110,38 @@ Function New-MarkdownDocumentation {
                                         "<tr><td>Aliases</td><td>$($ParameterItem.Aliases)</td></tr>",
                                         "<tr><td>Accept pipeline input</td><td>$($ParameterItem.ValueFromPipeline)</td></tr>",
                                         "</table>",
-                                        "`r`n"
+                                        "`n"
                                     )
                                 }
-                            } 
+                            }
+                            
                         } Else {
                             Add-Content -Path $OutputFile -Value "Sub Function of '$($FunctionItem.Location)'"
                         }
                     }
+                    
                 } Else {
                     Add-Content -Path $OutputFile -Value "**No functions found**"
                 }
+
                 Write-Verbose "Markdown file generated: '$OutputFile'"
+
                 $ReturnFile.Success = $true
+
             } Catch {
                 $ReturnFile.Success = $false
                 $ReturnFile.Error = $_.Exception.Message
+
                 Write-Error "Markdown File couldn't be generated '$OutputFile' - $($_.Exception.Message)"
             }
 
             $ReturnFile.File = $OutputFile
             $ReturnFiles += $ReturnFile
         }
+
     } Else {
         Write-Verbose "Generating one documentation file for all scripts"
+
         $ReturnFile = New-Object -TypeName PSObject -Property @{
             Success = ""
             File    = ""
@@ -134,10 +153,13 @@ Function New-MarkdownDocumentation {
             
             Add-Content -Path $OutputFile -Value @(
                 "# PowerShell Script Functions Documentation",
-                "``````YAML",
+                "`n",
+                "``````yaml",
                 "Date: $Date",
                 "``````",
+                "`n",
                 "## Script Files"
+                "`n"
             )
 
             ForEach ($ScriptFile in $Data) {
@@ -145,44 +167,52 @@ Function New-MarkdownDocumentation {
             }
 
             ForEach ($Element in $Data) {
-                Add-Content -Path $OutputFile -Value "## $($Element.File)"
-                Add-Content -Path $OutputFile -Value "Path: $($Element.Path)"
+                Add-Content -Path $OutputFile -Value "`n---`n"
+                Add-Content -Path $OutputFile -Value "## $($Element.File)`r`n"
+                Add-Content -Path $OutputFile -Value "Path: ``$($Element.Path)``"
+
                 If ($Element.Functions.Count -ne 0) {
-                    Add-Content -Path $OutputFile -Value "### Contents"
+                    Add-Content -Path $OutputFile -Value "### Contents`r`n"
                 
                     ForEach ($ContentItem in $Element.Functions) {
                         Add-Content -Path $OutputFile -Value " - [$($ContentItem.Name)](#$($($ContentItem.Name).ToLower()))"
                     }
 
                     ForEach ($FunctionItem in $Element.Functions) {
-                        Add-Content -Path $OutputFile -Value "### $($FunctionItem.Name)"
-                        Add-Content -Path $OutputFile -Value "Location: $($FunctionItem.Location)"
+                        Add-Content -Path $OutputFile -Value "### $($FunctionItem.Name)`r`n"
+                        Add-Content -Path $OutputFile -Value "Location: ``$($FunctionItem.Location)``"
+
                         If (Test-Path -Path "$global:ProjectFolderParent$($FunctionItem.Location)") {
                             Add-Content -Path $OutputFile -Value @(
                                 "### Syntax",
-                                "``````",
+                                "`n",
+                                "``````powershell",
                                 "$($FunctionItem.Syntax)",
-                                "``````"
+                                "``````",
+                                "`n"
                             )
 
                             If (-not ([String]::IsNullOrEmpty($FunctionItem.Synopsis))) {
                                 Add-Content -Path $OutputFile -Value @(
                                     "### Synopsis",
-                                    "$($FunctionItem.Synopsis) `r`n"
+                                    "`n",
+                                    "$($FunctionItem.Synopsis)`n"
                                 )
                             }
                             
                             If (-not ([String]::IsNullOrEmpty($FunctionItem.Description))) {
                                 Add-Content -Path $OutputFile -Value @(
                                     "### Description",
+                                    "`n",
                                     "$($FunctionItem.Description) `r`n"
                                 )
                             }
 
                             If ($FunctionItem.Examples.Count -gt 0) {
-                                Add-Content -Path $OutputFile -Value "### Examples"
+                                Add-Content -Path $OutputFile -Value "### Examples`r`n"
+
                                 ForEach ($ExampleItem in $FunctionItem.Examples) {
-                                    Add-Content -Path $OutputFile -Value "#### $($ExampleItem.Title)"
+                                    Add-Content -Path $OutputFile -Value "#### $($ExampleItem.Title)`r`n"
                                     Add-Content -Path $OutputFile -Value $ExampleItem.Description
                                 }
                             }
@@ -191,8 +221,9 @@ Function New-MarkdownDocumentation {
                                 Add-Content -Path $OutputFile -Value "### Parameters"
                                 ForEach ($ParameterItem in $FunctionItem.Parameters) {
                                     Add-Content -Path $OutputFile -Value @(
+                                        "`n",
                                         "``-$($ParameterItem.Name)``",
-                                        "`r`n",
+                                        "`n",
                                         "$($ParameterItem.HelpMessage)",
                                         "<table>",
                                         "<tr><td>Type</td><td>$($ParameterItem.ParameterType)</td></tr>",
@@ -200,23 +231,29 @@ Function New-MarkdownDocumentation {
                                         "<tr><td>Aliases</td><td>$($ParameterItem.Aliases)</td></tr>",
                                         "<tr><td>Accept pipeline input</td><td>$($ParameterItem.ValueFromPipeline)</td></tr>",
                                         "</table>",
-                                        "`r`n"
+                                        "`n"
                                     )
                                 }
-                            }                                
+                            }     
+                            
                         } Else {
                             Add-Content -Path $OutputFile -Value "Sub Function of '$($FunctionItem.Location)'"
                         }
                     }
+
                 } Else {
                     Add-Content -Path $OutputFile -Value "**No functions found**"
                 }
             }
+
             Write-Verbose "Markdown file generated: '$OutputFile'"
+
             $ReturnFile.Success = $true
+
         } Catch {
             $ReturnFile.Success = $false
             $ReturnFile.Error = $_.Exception.Message
+
             Write-Error "Markdown File couldn't be generated '$OutputFile' - $($_.Exception.Message)"
         }
         
